@@ -9,6 +9,7 @@ import { router as searchRouter } from "./routes/search.js";
 import { router as userRouter } from "./routes/user.js";
 import { router as userCharacterRouter } from "./routes/userCharacter.js";
 import { router as characterRouter } from "./routes/character.js";
+import { router as announcementRouter } from "./routes/announcement.js";
 
 const server = express();
 const router = express.Router();
@@ -35,6 +36,7 @@ server.use("/campaign", campaignRouter);
 server.use("/character", characterRouter);
 server.use("/search", searchRouter);
 server.use("/userCharacter", userCharacterRouter);
+server.use("/announcement", announcementRouter);
 
 server.use(router);
 
