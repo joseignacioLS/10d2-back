@@ -5,7 +5,7 @@ export const Campaigns = [
     name: "Los Cazadores de Aurovita",
     short: "LCDA",
     GM: "m0",
-    characters: ["ch1", "ch0"],
+    characters: ["ch0", "ch1", "ch2", "ch3", "ch4", "ch5"],
     sessions: ["s51", "s50", "s49", "s48", "s47", "s46"],
     summary: "Un grupo de aventureros recorren las tierras del reino de Dolfaren buscando gloria, oro, y quién sabe qué más cosas. Acompañados por Paca, su fiel gallina, no hay desafio que rechazen.",
     state: "on-going",

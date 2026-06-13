@@ -6,7 +6,7 @@ import { authenticateToken } from "../middleware/auth.js";
 
 export const router = express.Router();
 
-router.get("/:query", authenticateToken, async (req, res, next) => {
+router.get("/:query", async (req, res, next) => {
   try {
 
     const { query } = req.params;
