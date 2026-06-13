@@ -1,19 +1,21 @@
 import express from "express";
-import { Sessions } from "../bbdd/session.js";
 import { Campaigns } from "../bbdd/campaign.js";
-import { Characters } from "../bbdd/character.js";
 import { Members } from "../bbdd/member.js";
+
+import jwt from "jsonwebtoken";
+import { authenticateToken } from "../middleware/auth.js";
 
 export const router = express.Router();
 
 
-router.get("/:token", async (req, res, next) => {
+router.get("/", authenticateToken, async (req, res, next) => {
   try {
+    const token = req.cookies.token;
 
-    const { token } = req.params;
+    const userId = jwt.decode(token).id;
 
 
-    const member = Members.find(({ id }) => "m0" === id);
+    const member = Members.find(({ id }) => userId === id);
     if (!member) return res.status(404).json({
       status: 404,
       message: "login error",
@@ -29,7 +31,7 @@ router.get("/:token", async (req, res, next) => {
       status: 200,
       message: "Success",
       data: {
-        id: "m0",
+        id: userId,
         username: member.name,
         campaigns,
         subscriptions: member.subscriptions
@@ -47,32 +49,4 @@ router.get("/:token", async (req, res, next) => {
 });
 
 
-router.post("/login", async (req, res, next) => {
-  try {
 
-    const { user, password } = req.body;
-
-
-    if (password !== "bocadillo" || !Members.find(({ name }) => name === user)) {
-      return res.status(404).json({
-        status: 404,
-        message: "login error",
-        data: {},
-      });
-    }
-
-    return res.status(200).json({
-      status: 200,
-      message: "Success",
-      data: "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiIsImtpZCI6ImQ2YTczOGEzOWUwZmNiMGFhZjU0NDlmYTUwNGQxMzJmIn0.eyJpZCI6Im0wIiwidXNlcm5hbWUiOiJXaXROaW1yb3MifQ.Qo - BgbcWoxdpoHP2RKa28OqQuadTbqievPyEgWs0Nml0l9XWqNw2Ba_glNxwIxWvVAPf9A_y25joUTuHCyGhLg",
-    });
-
-  } catch (err) {
-    console.log(err);
-    res.status(500).json({
-      status: 500,
-      message: err,
-      data: {}
-    });
-  }
-});
