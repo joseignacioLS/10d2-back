@@ -23,13 +23,13 @@ export const login = async (req, res, next) => {
       expires: new Date(Date.now() + 1000 * 60 * 60),
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "none",
+      sameSite: process.env.NODE_ENV === "production"?"none":"lax",
       path: "/"
     });
     return res.status(200).json({
       status: 200,
       message: "",
-      data: "wi"
+      data: token
     });
 
   } catch (err) {
@@ -107,7 +107,7 @@ export const refresh = async (req, res, next) => {
       expires: new Date(Date.now() + 1000 * 60 * 60),
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "none",
+      sameSite: process.env.NODE_ENV === "production"?"none":"lax",
       path: "/"
     });
     return res.status(200).json({
