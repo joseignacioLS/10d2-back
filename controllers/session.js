@@ -9,7 +9,7 @@ export const getSessionById = async (req, res, next) => {
   try {
 
     const { sessionId } = req.params;
-    const session = Sessions.find(({ id }) => id === sessionId);
+    const session = structuredClone(Sessions.find(({ id }) => id === sessionId));
 
     const campaign = Campaigns.find(({ id }) => id === session?.campaign);
     const author = Characters.find(({ id }) => id === session?.author);
@@ -22,10 +22,15 @@ export const getSessionById = async (req, res, next) => {
       });
     }
 
+    session.summary.annotations.forEach(annotation => {
+      console.log({ annotation, Characters });
+      annotation.character = Characters.find(({ id }) => id === annotation.character)?.name ?? "-";
+    });
+
     return res.status(200).json({
       status: 200,
       message: "Success",
-      data: { ...session, campaign, author },
+      data: { ...session, campaign, author: author.name },
     });
 
   } catch (err) {
@@ -113,6 +118,54 @@ export const createSession = async (req, res, next) => {
     };
 
     Sessions.unshift(newSession);
+
+    return res.status(200).json({
+      status: 200,
+      message: "Success",
+      data: id,
+    });
+
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({
+      status: 500,
+      message: err,
+      data: {}
+    });
+  }
+};
+
+export const annotateSession = async (req, res, next) => {
+  try {
+    const userId = jwt.decode(req.cookies.token).id;
+
+    const {
+      sessionId,
+      position,
+      text
+    } = req.body;
+
+    const session = Sessions.find(({ id }) => sessionId === id);
+
+    const character = Characters.find(({ member, campaign }) => {
+      return member === userId && campaign === session?.campaign;
+    });
+
+    if (!session || !character) {
+      return res.status(404).json({
+        status: 404,
+        message: "Resource not found",
+        data: null,
+      });
+    }
+    const id = "fdasfdas";
+    session.summary.annotations.push({
+      id: String(session.summary.annotations.length),
+      position,
+      text,
+      character: character.id
+    });
+
 
     return res.status(200).json({
       status: 200,

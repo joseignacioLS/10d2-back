@@ -34,7 +34,15 @@ export const Sessions = [
 <p>Con esto llega la hora del gran espectáculo con Fi aún encarcelado. Este trata de liberarse al abandonar el puesto el guardia del cuartel, pero acaba destrozando todo a su paso sin conseguir salir del lugar. Gómez se apiada de él y se acerca a abrir la puerta con sus habilidades de cerrajero, justo antes del espectáculo. Finalmente todos consiguen disfrutar de los trapecistas, enormes animales exóticos, el novedoso “hombre bala” y las exóticas salamandras de fuego.</p>
 <p>Al acabar el evento el grupo vuelve a la taberna mientras debate qué debería hacer Fi. Deciden ocultarlo para que al día siguiente se entregue y haga frente a los cargos. Fi consigue llegar a la taberna (dentro de la bolsa de contención) y ocultarse en la habitación de la taberna a pesar de la aparición de los guardias.</p>
 <p>Al día siguiente se presentan ante la guardia, consiguen que Volotiteramo retire los cargos (gracias a una aportación económica) y abandonan Minstral de nuevo camino hacia Morwen. La monotonía de un paisaje sin nada reseñable llena los siguientes días de viaje hasta que un atardecer en el horizonte, sobre los bosques y llanuras ven la luz titilante de un faro.</p>`,
-      annotations: [],
+      annotations: [{
+        "id": "0",
+        "position": [
+          3,
+          2
+        ],
+        "text": "¡Ven con papi!",
+        "character": "ch3"
+      }],
       comments: [],
     },
   },

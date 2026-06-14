@@ -3,6 +3,8 @@ import { Characters } from "../bbdd/character.js";
 import { Members } from "../bbdd/member.js";
 import { Sessions } from "../bbdd/session.js";
 
+import jwt from "jsonwebtoken";
+
 export const getCampaignById = async (req, res, next) => {
   try {
 
@@ -56,7 +58,8 @@ export const getCampaignById = async (req, res, next) => {
         summary: campaign.summary,
         characters,
         sessions,
-        nextSession: campaign.nextSession
+        nextSession: campaign.nextSession,
+        GM: campaign.GM
       },
     });
 
@@ -93,6 +96,44 @@ export const getRecentCampaigns = async (req, res, next) => {
       status: 200,
       message: "Success",
       data: campaigns,
+    });
+
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({
+      status: 500,
+      message: err,
+      data: {}
+    });
+  }
+};
+
+
+
+export const checkAnnotationPermission = async (req, res, next) => {
+  try {
+
+    const { campaignId } = req.params;
+    const userId = jwt.decode(req.cookies.token).id;
+
+    const campaign = Campaigns.find(({ id }) => campaignId === id);
+
+    if (!campaign) {
+      return res.status(404).json({
+        status: 404,
+        message: "Resource not found",
+        data: null
+      });
+    }
+
+    const canAnnotate = Characters.filter(({ id }) => {
+      return campaign.characters.includes(id);
+    }).map(({ member }) => member).includes(userId);
+
+    return res.status(200).json({
+      status: 200,
+      message: "Success",
+      data: canAnnotate,
     });
 
   } catch (err) {
