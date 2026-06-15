@@ -40,7 +40,7 @@ export const Sessions = [
           3,
           2
         ],
-        "text": "¡Ven con papi!",
+        "text": "¡Vení con papi!",
         "character": "ch3"
       }],
       comments: [],

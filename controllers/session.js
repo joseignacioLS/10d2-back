@@ -23,7 +23,6 @@ export const getSessionById = async (req, res, next) => {
     }
 
     session.summary.annotations.forEach(annotation => {
-      console.log({ annotation, Characters });
       annotation.character = Characters.find(({ id }) => id === annotation.character)?.name ?? "-";
     });
 

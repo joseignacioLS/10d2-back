@@ -19,19 +19,19 @@ export const getCampaignById = async (req, res, next) => {
       });
     }
 
-
-    const characters = campaign.characters
-      .map((characterId) => {
-        const character = Characters.find(({ id }) => characterId === id);
+    const members = campaign.members
+      .map(({ memberId, chrId, role }) => {
+        const character = Characters.find(({ id }) => chrId === id);
         if (!character) return null;
-        const member = Members.find(({ id }) => character.member === id);
+        const member = Members.find(({ id }) => memberId === id);
         if (!member) return null;
         return {
-          id: character.id,
-          name: character.name,
-          member: {
-            id: character.member,
-            name: member.name
+          id: chrId,
+          name: member.name,
+          character: {
+            id: character.id,
+            name: character.name,
+            role
           }
         };
       })
@@ -56,7 +56,7 @@ export const getCampaignById = async (req, res, next) => {
       data: {
         name: campaign.name,
         summary: campaign.summary,
-        characters,
+        members,
         sessions,
         nextSession: campaign.nextSession,
         GM: campaign.GM
@@ -126,9 +126,7 @@ export const checkAnnotationPermission = async (req, res, next) => {
       });
     }
 
-    const canAnnotate = Characters.filter(({ id }) => {
-      return campaign.characters.includes(id);
-    }).map(({ member }) => member).includes(userId);
+    const canAnnotate = campaign.members.find(({ memberId }) => memberId === userId) !== undefined;
 
     return res.status(200).json({
       status: 200,
