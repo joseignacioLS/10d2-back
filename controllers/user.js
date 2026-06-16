@@ -8,7 +8,7 @@ export const getUserData = async (req, res, next) => {
   try {
     const token = req.cookies.token;
 
-    const userId = jwt.decode(token).id;
+    const { userId } = req;
 
 
     const member = Members.find(({ id }) => userId === id);

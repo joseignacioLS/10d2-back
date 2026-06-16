@@ -80,7 +80,7 @@ export const getRecentSessions = async (req, res, next) => {
 
 export const createSession = async (req, res, next) => {
   try {
-    const userId = jwt.decode(req.cookies.token).id;
+    const { userId } = req;
     const { campaign: campaignId, title, summary, number, date } = req.body;
 
     const campaign = Campaigns.find(({ id }) => id === campaignId);
@@ -136,7 +136,7 @@ export const createSession = async (req, res, next) => {
 
 export const annotateSession = async (req, res, next) => {
   try {
-    const userId = jwt.decode(req.cookies.token).id;
+    const { userId } = req;
 
     const {
       sessionId,

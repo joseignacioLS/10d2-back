@@ -26,10 +26,10 @@ export const getCampaignById = async (req, res, next) => {
         const member = Members.find(({ id }) => memberId === id);
         if (!member) return null;
         return {
-          id: chrId,
+          id: memberId,
           name: member.name,
           character: {
-            id: character.id,
+            id: chrId,
             name: character.name,
             role
           }
@@ -56,6 +56,7 @@ export const getCampaignById = async (req, res, next) => {
       data: {
         name: campaign.name,
         summary: campaign.summary,
+        short: campaign.short,
         members,
         sessions,
         nextSession: campaign.nextSession,
@@ -108,13 +109,10 @@ export const getRecentCampaigns = async (req, res, next) => {
   }
 };
 
-
-
 export const checkAnnotationPermission = async (req, res, next) => {
   try {
-
+    const { userId } = req;
     const { campaignId } = req.params;
-    const userId = jwt.decode(req.cookies.token).id;
 
     const campaign = Campaigns.find(({ id }) => campaignId === id);
 
@@ -132,6 +130,42 @@ export const checkAnnotationPermission = async (req, res, next) => {
       status: 200,
       message: "Success",
       data: canAnnotate,
+    });
+
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({
+      status: 500,
+      message: err,
+      data: {}
+    });
+  }
+};
+
+export const editCampaign = async (req, res, next) => {
+  try {
+
+    const { campaignId, name, short, summary, nextSession } = req.body;
+    const campaign = Campaigns.find(({ id }) => id === campaignId);
+
+    if (!campaignId) {
+      return res.status(404).json({
+        status: 404,
+        message: "Resource not found",
+        data: {},
+      });
+    }
+
+    campaign.name = name;
+    campaign.short = short;
+    campaign.summary = summary;
+    campaign.nextSession = nextSession;
+
+
+    return res.status(200).json({
+      status: 200,
+      message: "Success",
+      data: null,
     });
 
   } catch (err) {

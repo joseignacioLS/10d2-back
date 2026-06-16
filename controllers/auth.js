@@ -23,7 +23,7 @@ export const login = async (req, res, next) => {
       expires: new Date(Date.now() + 1000 * 60 * 60),
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: process.env.NODE_ENV === "production"?"none":"lax",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
       path: "/"
     });
     return res.status(200).json({
@@ -87,27 +87,17 @@ export const register = async (req, res, next) => {
 
 export const refresh = async (req, res, next) => {
   try {
-    const receivedToken = req.cookies.token;
-    if (!receivedToken) {
-      return res.status(401).json({ status: 401, data: null, message: 'Access token not provided' });
-    }
-    jwt.verify(receivedToken, process.env.JWT_SECRET, (err, payload) => {
-      if (err) {
-        return res.status(403).json({ status: 403, data: null, message: 'Invalid or expired access token' });
-      }
-      // Attach the user ID to the request object for use in subsequent handlers
-      req.userId = payload.id;
-    });
+    const { userId } = req;
 
     const token = jwt.sign({
-      id: jwt.decode(receivedToken).id
+      id: userId
     }, process.env.JWT_SECRET,
       { expiresIn: "1h" });
     res.cookie("token", token, {
       expires: new Date(Date.now() + 1000 * 60 * 60),
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: process.env.NODE_ENV === "production"?"none":"lax",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
       path: "/"
     });
     return res.status(200).json({
