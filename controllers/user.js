@@ -21,7 +21,12 @@ export const getUserData = async (req, res, next) => {
 
     const campaigns = member.campaigns.map((campaignId) => {
       return Campaigns.find(({ id }) => id === campaignId);
-    }).filter(v => v !== undefined);
+    }).filter(v => v !== undefined).map(({ id, members }) => {
+      return {
+        id,
+        role: members.find(({ memberId }) => memberId === userId)?.role
+      };
+    });
 
     return res.status(200).json({
       status: 200,
