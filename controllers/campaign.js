@@ -54,6 +54,7 @@ export const getCampaignById = async (req, res, next) => {
       status: 200,
       message: "Success",
       data: {
+        id: campaignId,
         name: campaign.name,
         summary: campaign.summary,
         short: campaign.short,
