@@ -14,7 +14,8 @@ export const getUserData = async (req, res, next) => {
           jsonb_agg(
             jsonb_build_object(
               'id', c.id,
-              'role', cm.role
+              'role', cm.role,
+              'name', c.name
             )
           ) FILTER (WHERE c.id IS NOT NULL),
           '[]'
