@@ -166,14 +166,6 @@ export const editCampaign = async (req, res, next) => {
   try {
     const { campaignId, name, short, summary, nextSession } = req.body;
 
-    if (!campaignId) {
-      return res.status(400).json({
-        status: 400,
-        message: "campaignId is required",
-        data: {},
-      });
-    }
-
     const result = await sql`
       UPDATE campaign
       SET

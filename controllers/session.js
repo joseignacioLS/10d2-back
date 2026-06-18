@@ -116,7 +116,7 @@ export const getRecentSessions = async (req, res) => {
         campaign_id,
         number,
         title,
-        author,
+        author_id,
         session_date,
         summary
       )
