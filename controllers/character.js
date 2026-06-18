@@ -1,20 +1,32 @@
-import { Campaigns } from "../bbdd/campaign.js";
-import { Characters } from "../bbdd/character.js";
+import { neon } from "@neondatabase/serverless";
+const sql = neon(process.env.POSTGRESQL);
 
 export const getCharacterById = async (req, res, next) => {
   try {
-
     const { characterId } = req.params;
-    const character = Characters.find(({ id }) => id === characterId);
 
-    const campaign = Campaigns.find(({ id }) => id === character?.campaign);
+    const result = await sql`
+      SELECT
+        ch.name,
+        ch.member_id AS member,
+        jsonb_build_object(
+          'id', c.id,
+          'short', c.short
+        ) AS campaign
 
+      FROM character ch
+      JOIN campaign c ON c.id = ch.campaign_id
+      WHERE ch.id = ${characterId}
+      LIMIT 1;
+    `;
 
-    if (!character || !campaign) {
+    const character = result[0];
+
+    if (!character) {
       return res.status(404).json({
         status: 404,
         message: "Resource not found",
-        data: {},
+        data: {}
       });
     }
 
@@ -24,18 +36,15 @@ export const getCharacterById = async (req, res, next) => {
       data: {
         name: character.name,
         member: character.member,
-        campaign: {
-          id: campaign.id,
-          short: campaign.short
-        }
-      },
+        campaign: character.campaign
+      }
     });
 
   } catch (err) {
     console.log(err);
-    res.status(500).json({
+    return res.status(500).json({
       status: 500,
-      message: err,
+      message: err.message ?? err,
       data: {}
     });
   }

@@ -1,98 +1,118 @@
+import { neon } from "@neondatabase/serverless";
 import { Campaigns } from "../bbdd/campaign.js";
-import { Characters } from "../bbdd/character.js";
-import { Members } from "../bbdd/member.js";
-import { Sessions } from "../bbdd/session.js";
 
-import jwt from "jsonwebtoken";
+
+const sql = neon(process.env.POSTGRESQL);
 
 export const getCampaignById = async (req, res, next) => {
   try {
-
     const { campaignId } = req.params;
-    const campaign = Campaigns.find(({ id }) => id === campaignId);
 
-    if (!campaignId) {
-      return res.status(404).json({
-        status: 404,
-        message: "Resource not found",
-        data: {},
-      });
-    }
+    const campaign = await sql`
+      SELECT
+        c.id,
+        c.name,
+        c.summary,
+        c.short,
+        to_char(c.next_session, 'YYYY-MM-DD') AS "nextSession",
 
-    const members = campaign.members
-      .map(({ memberId, chrId, role }) => {
-        const character = Characters.find(({ id }) => chrId === id);
-        if (!character) return null;
-        const member = Members.find(({ id }) => memberId === id);
-        if (!member) return null;
-        return {
-          id: memberId,
-          name: member.name,
-          character: {
-            id: chrId,
-            name: character.name,
-            role
-          }
-        };
-      })
-      .filter((v) => v !== null);
+        -- GM
+        (
+          SELECT jsonb_build_object(
+            'memberId', m.id,
+            'name', m.name,
+            'character', jsonb_build_object(
+              'id', ch.id,
+              'name', ch.name,
+              'color', ch.color
+            )
+          )
+          FROM campaign_member cm
+          JOIN member m ON m.id = cm.member_id
+          LEFT JOIN character ch
+            ON ch.member_id = m.id
+           AND ch.campaign_id = c.id
+          WHERE cm.campaign_id = c.id
+            AND cm.role = 'GM'
+          LIMIT 1
+        ) AS "GM",
 
+        -- MEMBERS
+        COALESCE(
+          (
+            SELECT jsonb_agg(
+              jsonb_build_object(
+                'memberId', m.id,
+                'name', m.name,
+                'role', cm.role,
+                'character', jsonb_build_object(
+                  'id', ch.id,
+                  'name', ch.name,
+                  'color', ch.color
+                )
+              )
+            )
+            FROM campaign_member cm
+            JOIN member m ON m.id = cm.member_id
+            LEFT JOIN character ch
+              ON ch.member_id = m.id
+             AND ch.campaign_id = c.id
+            WHERE cm.campaign_id = c.id
+          ),
+          '[]'
+        ) AS members,
 
-    const sessions = campaign.sessions.map((sessionId) => {
-      const session = Sessions.find(({ id }) => sessionId === id);
-      if (!session) return null;
-      return {
-        id: session.id,
-        number: session.number,
-        title: session.title,
-        date: session.date
-      };
-    }).filter(v => v !== null);
+        -- SESSIONS
+        COALESCE(
+          (
+            SELECT jsonb_agg(
+              jsonb_build_object(
+                'id', s.id,
+                'number', s.number,
+                'title', s.title,
+                'date', s.session_date::date
+              )
+              ORDER BY s.number DESC
+            )
+            FROM session s
+            WHERE s.campaign_id = c.id
+          ),
+          '[]'
+        ) AS sessions
 
+      FROM campaign c
+      WHERE c.id = ${campaignId};
+    `;
 
     return res.status(200).json({
       status: 200,
       message: "Success",
-      data: {
-        id: campaignId,
-        name: campaign.name,
-        summary: campaign.summary,
-        short: campaign.short,
-        members,
-        sessions,
-        nextSession: campaign.nextSession,
-        GM: campaign.GM
-      },
+      data: campaign[0],
     });
 
   } catch (err) {
     console.log(err);
-    res.status(500).json({
+    return res.status(500).json({
       status: 500,
       message: err,
       data: {}
     });
   }
 };
-
 export const getRecentCampaigns = async (req, res, next) => {
   try {
-
     const { n } = req.params;
-    const number = Math.min(Number(n), 10);
-    const campaigns = Campaigns.toSorted(
-      (a, b) => {
-        return a.lastActivity < b.lastActivity ? 1 : -1;
-      }
-    ).slice(0, number)
-      .map(s => {
-        return {
-          id: s.id,
-          name: s.name,
-          short: s.short
-        };
-      });
+    const number = Math.min(Number(n || 10), 10);
 
+    const campaigns = await sql`
+      SELECT
+        id,
+        name,
+        short
+      FROM campaign
+      ORDER BY last_activity DESC NULLS LAST
+      LIMIT ${number};
+    `;
 
     return res.status(200).json({
       status: 200,
@@ -102,7 +122,7 @@ export const getRecentCampaigns = async (req, res, next) => {
 
   } catch (err) {
     console.log(err);
-    res.status(500).json({
+    return res.status(500).json({
       status: 500,
       message: err,
       data: {}
@@ -142,38 +162,54 @@ export const checkAnnotationPermission = async (req, res, next) => {
     });
   }
 };
-
 export const editCampaign = async (req, res, next) => {
   try {
-
     const { campaignId, name, short, summary, nextSession } = req.body;
-    const campaign = Campaigns.find(({ id }) => id === campaignId);
 
     if (!campaignId) {
-      return res.status(404).json({
-        status: 404,
-        message: "Resource not found",
+      return res.status(400).json({
+        status: 400,
+        message: "campaignId is required",
         data: {},
       });
     }
 
-    campaign.name = name;
-    campaign.short = short;
-    campaign.summary = summary;
-    campaign.nextSession = nextSession;
+    const result = await sql`
+      UPDATE campaign
+      SET
+        name = ${name},
+        short = ${short},
+        summary = ${summary},
+        next_session = ${nextSession},
+        updated_at = now()
+      WHERE id = ${campaignId}
+      RETURNING
+        id,
+        name,
+        short,
+        summary,
+        to_char(next_session, 'YYYY-MM-DD') AS "nextSession";
+    `;
 
+    if (result.length === 0) {
+      return res.status(404).json({
+        status: 404,
+        message: "Campaign not found",
+        data: {},
+      });
+    }
 
     return res.status(200).json({
       status: 200,
       message: "Success",
-      data: null,
+      data: result[0],
     });
 
   } catch (err) {
     console.log(err);
-    res.status(500).json({
+    return res.status(500).json({
       status: 500,
-      message: err,
+      message: err.message ?? err,
       data: {}
     });
   }

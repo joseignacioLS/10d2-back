@@ -15,6 +15,7 @@ import { router as userRouter } from "./routes/user.js";
 const server = express();
 const router = express.Router();
 
+
 const origin =
   process.env.CORS_ACCEPTED === "*"
     ? "*"
