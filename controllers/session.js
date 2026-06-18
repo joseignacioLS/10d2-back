@@ -175,8 +175,8 @@ export const annotateSession = async (req, res) => {
       VALUES (
         ${sessionId},
         ${character[0].id},
-        ${position},
-        ${position},
+        ${position[1]},
+        ${position[0]},
         ${text}
       )
       RETURNING id;
