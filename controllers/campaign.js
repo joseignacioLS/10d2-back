@@ -19,7 +19,7 @@ export const getCampaignById = async (req, res, next) => {
         -- GM
         (
           SELECT jsonb_build_object(
-            'memberId', m.id,
+            'id', m.id,
             'name', m.name,
             'character', jsonb_build_object(
               'id', ch.id,
@@ -42,7 +42,7 @@ export const getCampaignById = async (req, res, next) => {
           (
             SELECT jsonb_agg(
               jsonb_build_object(
-                'memberId', m.id,
+                'id', m.id,
                 'name', m.name,
                 'role', cm.role,
                 'character', jsonb_build_object(
