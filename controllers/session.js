@@ -193,3 +193,42 @@ export const annotateSession = async (req, res) => {
     return res.status(500).json({ status: 500, message: err.message });
   }
 };
+
+export const deleteAnnotation = async (req, res) => {
+  try {
+    const { userId } = req;
+    const { annotationId } = req.params;
+
+    // Verificar que la anotación existe y pertenece al usuario
+    const annotation = await sql`
+      SELECT sa.id, sa.character_id
+      FROM session_annotation sa
+      JOIN character c ON c.id = sa.character_id
+      WHERE sa.id = ${annotationId} AND c.member_id = ${userId}
+    `;
+
+    if (!annotation[0]) {
+      return res.status(404).json({
+        status: 404,
+        message: "Annotation not found or unauthorized",
+        data: null
+      });
+    }
+
+    // Eliminar la anotación
+    await sql`
+      DELETE FROM session_annotation
+      WHERE id = ${annotationId}
+    `;
+
+    return res.json({
+      status: 200,
+      message: "Annotation deleted successfully",
+      data: null
+    });
+
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json({ status: 500, message: err.message });
+  }
+};

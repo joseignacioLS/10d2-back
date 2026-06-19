@@ -14,8 +14,12 @@ export const getUserData = async (req, res, next) => {
           jsonb_agg(
             jsonb_build_object(
               'id', c.id,
+              'name', c.name,
               'role', cm.role,
-              'name', c.name
+              'character', jsonb_build_object(
+                'id', ch.id, 
+                'name', ch.name
+              )
             )
           ) FILTER (WHERE c.id IS NOT NULL),
           '[]'
@@ -28,6 +32,9 @@ export const getUserData = async (req, res, next) => {
 
       LEFT JOIN campaign c
         ON c.id = cm.campaign_id
+
+      LEFT JOIN character ch
+        ON ch.member_id =  m.id AND ch.campaign_id = c.id
 
       WHERE m.id = ${userId}
 
