@@ -4,11 +4,22 @@ import { Campaigns } from "../bbdd/campaign.js";
 
 const sql = neon(process.env.POSTGRESQL);
 
+const cache = {
+};
+
 export const getCampaignById = async (req, res, next) => {
   try {
     const { campaignId } = req.params;
 
-    const campaign = await sql`
+    if (cache[campaign]) {
+      return res.status(200).json({
+        status: 200,
+        message: "Success",
+        data: cache[campaignId],
+      });
+    }
+
+    const result = await sql`
       SELECT
         c.id,
         c.name,
@@ -84,10 +95,16 @@ export const getCampaignById = async (req, res, next) => {
       WHERE c.id = ${campaignId};
     `;
 
+    if (!result[0]) {
+      return res.status(404).json({ status: 404, message: "Not found", data: {} });
+    }
+
+    cache[campaignId] = result[0];
+
     return res.status(200).json({
       status: 200,
       message: "Success",
-      data: campaign[0],
+      data: result[0],
     });
 
   } catch (err) {

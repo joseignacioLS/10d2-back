@@ -1,9 +1,18 @@
 
 import { neon } from "@neondatabase/serverless";
 const sql = neon(process.env.POSTGRESQL);
+const cache = {};
 export const getSessionById = async (req, res) => {
   try {
     const { sessionId } = req.params;
+
+    if (cache[sessionId]) {
+      return res.status(200).json({
+        status: 200,
+        message: "Success",
+        data: result[0]
+      });
+    }
 
     const result = await sql`
   SELECT
@@ -50,6 +59,8 @@ export const getSessionById = async (req, res) => {
     if (!result[0]) {
       return res.status(404).json({ status: 404, message: "Not found", data: {} });
     }
+
+    cache[sessionId] = result[0];
 
     return res.status(200).json({
       status: 200,
