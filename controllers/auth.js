@@ -22,6 +22,7 @@ export const login = async (req, res, next) => {
 
     const authUser = result[0];
 
+
     if (!authUser || authUser.password !== password) {
       return res.status(401).json({
         status: 401,
@@ -36,20 +37,11 @@ export const login = async (req, res, next) => {
       { expiresIn: "1h" }
     );
 
-    res.cookie("token", token, {
-      expires: new Date(Date.now() + 1000 * 60 * 60),
-      httpOnly: true,
-      secure: true,
-      sameSite: "none",
-      path: "/"
-    });
 
     return res.status(200).json({
       status: 200,
       message: "Success",
-      data: {
-        token
-      }
+      data: token
     });
 
   } catch (err) {
@@ -88,7 +80,7 @@ export const register = async (req, res, next) => {
       id: member.id
     }, process.env.JWT_SECRET,
       { expiresIn: "1h" });
-    res.cookie("token", token, { expires: new Date(Date.now() + 1000 * 60 * 60), httpOnly: true });
+
     return res.status(200).json({
       status: 200,
       message: "",
@@ -113,13 +105,6 @@ export const refresh = async (req, res, next) => {
       id: userId
     }, process.env.JWT_SECRET,
       { expiresIn: "1h" });
-    res.cookie("token", token, {
-      expires: new Date(Date.now() + 1000 * 60 * 60),
-      httpOnly: true,
-      secure: true,
-      sameSite: "none",
-      path: "/"
-    });
     return res.status(200).json({
       status: 200,
       message: "",
@@ -138,7 +123,6 @@ export const refresh = async (req, res, next) => {
 
 export const logout = async (req, res, next) => {
   try {
-    res.cookie("token", "Deleted", { expires: new Date(Date.now()), httpOnly: true });
     return res.status(200).json({
       status: 200,
       message: "",

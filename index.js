@@ -3,7 +3,6 @@ import express from "express";
 
 import "dotenv/config";
 
-import cookieParser from "cookie-parser";
 import { router as announcementRouter } from "./routes/announcement.js";
 import { router as authRouter } from "./routes/auth.js";
 import { router as campaignRouter } from "./routes/campaign.js";
@@ -30,7 +29,6 @@ server.use(
 
 server.use(express.json());
 server.use(express.urlencoded({ extended: true }));
-server.use(cookieParser());
 
 //JWT SECRET KEY
 
