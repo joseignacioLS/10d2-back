@@ -1,5 +1,5 @@
 import express from "express";
-import { annotateSession, createSession, deleteAnnotation, editAnnotation, getRecentSessions, getSessionById } from "../controllers/session.js";
+import { annotateSession, createSession, deleteAnnotation, editAnnotation, editSession, getRecentSessions, getSessionById, publishSession } from "../controllers/session.js";
 import { authenticateToken, isMemberOfCampaign } from "../middleware/auth.js";
 
 export const router = express.Router();
@@ -9,5 +9,7 @@ router.get("/last/:n", getRecentSessions);
 router.post("/", authenticateToken, isMemberOfCampaign, createSession);
 router.post("/annotation", authenticateToken, isMemberOfCampaign, annotateSession);
 router.put("/annotation/:annotationId", authenticateToken, editAnnotation);
+router.put("/", authenticateToken, editSession);
+router.put("/publish/:sessionId", authenticateToken, publishSession);
 router.delete("/annotation/:annotationId", authenticateToken, deleteAnnotation);
 

@@ -1,3 +1,4 @@
+import jwt from "jsonwebtoken";
 import { neon } from "@neondatabase/serverless";
 import { Campaigns } from "../bbdd/campaign.js";
 
@@ -7,6 +8,8 @@ const sql = neon(process.env.POSTGRESQL);
 export const getCampaignById = async (req, res, next) => {
   try {
     const { campaignId } = req.params;
+
+    const { id: userId } = jwt.decode(req.headers.authtoken) ?? { id: undefined };
 
     const campaign = await sql`
       SELECT
@@ -70,12 +73,16 @@ export const getCampaignById = async (req, res, next) => {
                 'id', s.id,
                 'number', s.number,
                 'title', s.title,
-                'date', s.session_date::date
+                'date', s.session_date::date,
+                'status', s.status
               )
               ORDER BY s.number DESC
             )
             FROM session s
-            WHERE s.campaign_id = c.id AND s.status = 'published'
+            WHERE s.campaign_id = c.id AND (s.status = 'published' OR (s.status = 'draft' AND s.author_id IN (
+              SELECT ch.id FROM character ch
+              WHERE ch.campaign_id = c.id AND ch.member_id = ${userId}
+            )))
           ),
           '[]'
         ) AS sessions

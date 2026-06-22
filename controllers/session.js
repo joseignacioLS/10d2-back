@@ -1,9 +1,24 @@
 
 import { neon } from "@neondatabase/serverless";
+import jwt from "jsonwebtoken";
+
 const sql = neon(process.env.POSTGRESQL);
 export const getSessionById = async (req, res) => {
   try {
     const { sessionId } = req.params;
+
+    const { id: userId } = jwt.decode(req.headers.authtoken) ?? { id: undefined };
+
+    const guard = await sql`
+    SELECT *
+    FROM session s
+    JOIN character ch
+    ON ch.id = s.author_id
+    WHERE s.id = ${sessionId} AND ch.member_id = ${userId} `;
+
+    if (!guard[0]) {
+      return res.status(401).json({ status: 401, message: "Unauthorized", data: {} });
+    }
 
     const result = await sql`
   SELECT
@@ -48,7 +63,7 @@ export const getSessionById = async (req, res) => {
   GROUP BY s.id, c.id, ch.id;
 `;
 
-    if (!result[0] || result[0].status !== "published") {
+    if (!result[0]) {
       return res.status(404).json({ status: 404, message: "Not found", data: {} });
     }
 
@@ -63,6 +78,7 @@ export const getSessionById = async (req, res) => {
     return res.status(500).json({ status: 500, message: err.message });
   }
 };
+
 export const getRecentSessions = async (req, res) => {
   try {
     const number = Math.min(Number(req.params.n || 10), 10);
@@ -91,7 +107,9 @@ export const getRecentSessions = async (req, res) => {
     console.log(err);
     return res.status(500).json({ status: 500, message: err.message });
   }
-}; export const createSession = async (req, res) => {
+};
+
+export const createSession = async (req, res) => {
   try {
     const { userId } = req;
     const { campaign: campaignId, title, summary, number, date } = req.body;
@@ -120,7 +138,8 @@ export const getRecentSessions = async (req, res) => {
         title,
         author_id,
         session_date,
-        summary
+        summary,
+        status
       )
       VALUES (
         ${campaignId},
@@ -128,7 +147,8 @@ export const getRecentSessions = async (req, res) => {
         ${title},
         ${author[0].id},
         ${date},
-        ${summary}
+        ${summary},
+        'draft'
       )
       RETURNING id;
     `;
@@ -144,6 +164,91 @@ export const getRecentSessions = async (req, res) => {
     return res.status(500).json({ status: 500, message: err.message });
   }
 };
+
+export const editSession = async (req, res) => {
+  try {
+    const { userId } = req;
+    const { sessionId, title, summary, date } = req.body;
+
+    const sessionOwner = await sql`
+      SELECT s.id
+      FROM session s
+      JOIN character ch ON ch.id = s.author_id
+      WHERE s.id = ${sessionId}
+        AND ch.member_id = ${userId}
+      LIMIT 1;
+    `;
+
+    if (!sessionOwner[0]) {
+      return res.status(404).json({
+        status: 404,
+        message: "Session not found or unauthorized",
+        data: null
+      });
+    }
+
+    const result = await sql`
+      UPDATE session
+      SET title = ${title},
+          summary = ${summary},
+          session_date = ${date}
+      WHERE id = ${sessionId}
+      RETURNING id;
+    `;
+
+    return res.json({
+      status: 200,
+      message: "Success",
+      data: result[0].id
+    });
+
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json({ status: 500, message: err.message });
+  }
+};
+
+export const publishSession = async (req, res) => {
+  try {
+    const { userId } = req;
+    const { sessionId } = req.params;
+
+    const sessionOwner = await sql`
+      SELECT s.id
+      FROM session s
+      JOIN character ch ON ch.id = s.author_id
+      WHERE s.id = ${sessionId}
+        AND ch.member_id = ${userId}
+      LIMIT 1;
+    `;
+
+    if (!sessionOwner[0]) {
+      return res.status(404).json({
+        status: 404,
+        message: "Session not found or unauthorized",
+        data: null
+      });
+    }
+
+    const result = await sql`
+      UPDATE session
+      SET status = 'published'
+      WHERE id = ${sessionId}
+      RETURNING id;
+    `;
+
+    return res.json({
+      status: 200,
+      message: "Success",
+      data: result[0].id
+    });
+
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json({ status: 500, message: err.message });
+  }
+};
+
 export const annotateSession = async (req, res) => {
   try {
     const { userId } = req;
