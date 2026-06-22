@@ -12,6 +12,7 @@ export const getSessionById = async (req, res) => {
     s.number,
     to_char(s.session_date, 'YYYY-MM-DD') AS "date",
     s.summary,
+    s.status,
 
     jsonb_build_object(
       'id', c.id,
@@ -47,7 +48,7 @@ export const getSessionById = async (req, res) => {
   GROUP BY s.id, c.id, ch.id;
 `;
 
-    if (!result[0]) {
+    if (!result[0] || result[0].status !== "published") {
       return res.status(404).json({ status: 404, message: "Not found", data: {} });
     }
 
@@ -75,6 +76,7 @@ export const getRecentSessions = async (req, res) => {
         to_char(s.session_date, 'YYYY-MM-DD') AS "session_date"
       FROM session s
       JOIN campaign c ON c.id = s.campaign_id
+      WHERE s.status = 'published'
       ORDER BY s.session_date DESC
       LIMIT ${number};
     `;

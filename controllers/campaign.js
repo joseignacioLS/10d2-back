@@ -75,7 +75,7 @@ export const getCampaignById = async (req, res, next) => {
               ORDER BY s.number DESC
             )
             FROM session s
-            WHERE s.campaign_id = c.id
+            WHERE s.campaign_id = c.id AND s.status = 'published'
           ),
           '[]'
         ) AS sessions
