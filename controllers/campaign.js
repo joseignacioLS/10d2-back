@@ -79,10 +79,7 @@ export const getCampaignById = async (req, res, next) => {
               ORDER BY s.number DESC
             )
             FROM session s
-            WHERE s.campaign_id = c.id AND (s.status = 'published' OR (s.status = 'draft' AND s.author_id IN (
-              SELECT ch.id FROM character ch
-              WHERE ch.campaign_id = c.id AND ch.member_id = ${userId}
-            )))
+            WHERE s.campaign_id = c.id AND (s.status = 'published' OR s.status = 'draft')
           ),
           '[]'
         ) AS sessions

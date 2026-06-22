@@ -14,10 +14,10 @@ export const getSessionById = async (req, res) => {
     FROM session s
     JOIN character ch
     ON ch.id = s.author_id
-    WHERE s.id = ${sessionId} AND ch.member_id = ${userId} `;
+    WHERE s.id = ${sessionId} AND (ch.member_id = ${userId} OR s.status = 'published')`;
 
     if (!guard[0]) {
-      return res.status(401).json({ status: 401, message: "Unauthorized", data: {} });
+      return res.status(401).json({ status: 401, message: "No tienes permiso para acceder a esta sesión", data: {} });
     }
 
     const result = await sql`
