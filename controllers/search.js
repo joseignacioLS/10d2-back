@@ -21,6 +21,7 @@ export const search = async (req, res, next) => {
         id,
         title,
         number,
+        campaign_id as campaign,
         to_char(session_date, 'YYYY-MM-DD') AS date
       FROM session
       WHERE title ILIKE ${q}
